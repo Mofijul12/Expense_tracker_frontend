@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useApi, useApp } from '../lib/store.jsx';
 import { Topbar, Async, Empty } from '../components/Shell.jsx';
+import PdfPreview from '../components/PdfPreview.jsx';
+import { buildExpensesPdf } from '../lib/pdf.js';
 import { formatMoney, formatMonthName, formatShortDate } from '../lib/format.js';
 
 const FILTERS = [
@@ -12,37 +14,15 @@ const FILTERS = [
 
 const PAGE_SIZE = 10;
 
-/** Turn the rows into a CSV file the browser downloads. */
-function exportCsv(rows, symbol) {
-  const head = ['Date', 'Category', 'Note', `Amount (${symbol})`];
-  const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const body = rows.map((r) =>
-    [
-      new Date(r.date).toISOString().slice(0, 10),
-      r.category?.name || 'Uncategorized',
-      r.note,
-      r.amount,
-    ]
-      .map(escape)
-      .join(',')
-  );
-  const blob = new Blob([[head.map(escape).join(','), ...body].join('\n')], {
-    type: 'text/csv;charset=utf-8',
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'expenses.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 export default function Expenses() {
   const { month, settings, categories, notify } = useApp();
   const navigate = useNavigate();
 
   const [filter, setFilter] = useState('all');
   const [category, setCategory] = useState('');
+  // null until a PDF has been built and is waiting to be reviewed.
+  const [preview, setPreview] = useState(null);
+  const [building, setBuilding] = useState(false);
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
   const [page, setPage] = useState(1);
@@ -119,14 +99,28 @@ export default function Expenses() {
 
             <button
               className="btn btn-secondary"
-              disabled={!state.data?.items.length}
-              onClick={() => {
-                exportCsv(state.data.items, settings?.currencySymbol || '');
-                notify('Exported this page to expenses.csv');
+              disabled={building || !state.data?.items.length}
+              onClick={async () => {
+                setBuilding(true);
+                try {
+                  setPreview(
+                    await buildExpensesPdf({
+                      rows: state.data.items,
+                      settings,
+                      title: 'Expenses',
+                      subtitle: `Every expense in ${formatMonthName(month)}`,
+                      filename: `expenses-${month}.pdf`,
+                    })
+                  );
+                } catch (err) {
+                  notify(`Could not build the PDF — ${err.message}`);
+                } finally {
+                  setBuilding(false);
+                }
               }}
             >
-              <i className="ph ph-export" style={{ fontSize: 14 }} />
-              Export
+              <i className="ph ph-file-pdf" style={{ fontSize: 14 }} />
+              {building ? 'Preparing…' : 'Export PDF'}
             </button>
           </div>
 
@@ -239,6 +233,14 @@ export default function Expenses() {
           </Async>
         </div>
       </div>
+
+      <PdfPreview
+        open={!!preview}
+        title="Expenses"
+        subtitle={formatMonthName(month)}
+        file={preview}
+        onClose={() => setPreview(null)}
+      />
     </>
   );
 }

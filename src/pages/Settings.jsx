@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 import { useApp } from '../lib/store.jsx';
 import { Topbar, Loading } from '../components/Shell.jsx';
+import PdfPreview from '../components/PdfPreview.jsx';
+import { buildExpensesPdf } from '../lib/pdf.js';
 import { formatMoney, formatMonthName } from '../lib/format.js';
 
 const CURRENCIES = [
@@ -39,6 +41,9 @@ export default function Settings() {
   const [budget, setBudget] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  // null until a PDF has been built and is waiting to be reviewed.
+  const [preview, setPreview] = useState(null);
+  const [building, setBuilding] = useState(false);
 
   useEffect(() => {
     if (settings) setBudget(String(settings.monthlyBudget));
@@ -190,34 +195,33 @@ export default function Settings() {
             <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
               <button
                 className="btn btn-secondary"
+                disabled={building}
                 onClick={async () => {
-                  const data = await api.expenses.list({ month, limit: 200 });
-                  const head = ['Date', 'Category', 'Note', 'Amount'];
-                  const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-                  const csv = [
-                    head.map(esc).join(','),
-                    ...data.items.map((r) =>
-                      [
-                        new Date(r.date).toISOString().slice(0, 10),
-                        r.category?.name || 'Uncategorized',
-                        r.note,
-                        r.amount,
-                      ]
-                        .map(esc)
-                        .join(',')
-                    ),
-                  ].join('\n');
-                  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `expenses-${month}.csv`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                  notify(`Exported ${data.items.length} expenses`);
+                  setBuilding(true);
+                  try {
+                    const data = await api.expenses.list({ month, limit: 200 });
+                    if (!data.items.length) {
+                      notify(`Nothing to export in ${formatMonthName(month)}`);
+                      return;
+                    }
+                    setPreview(
+                      await buildExpensesPdf({
+                        rows: data.items,
+                        settings,
+                        title: 'Expenses',
+                        subtitle: `Every expense in ${formatMonthName(month)}`,
+                        filename: `expenses-${month}.pdf`,
+                      })
+                    );
+                  } catch (err) {
+                    notify(`Could not build the PDF — ${err.message}`);
+                  } finally {
+                    setBuilding(false);
+                  }
                 }}
               >
-                <i className="ph ph-download-simple" style={{ fontSize: 14 }} />
-                Export CSV
+                <i className="ph ph-file-pdf" style={{ fontSize: 14 }} />
+                {building ? 'Preparing…' : 'Export PDF'}
               </button>
               <button className="btn btn-secondary" disabled title="Not connected in this build">
                 <i className="ph ph-plug" style={{ fontSize: 14 }} />
@@ -226,12 +230,20 @@ export default function Settings() {
             </div>
 
             <div className="muted-sm">
-              Export pulls the whole of {formatMonthName(month)}. Bank syncing isn&apos;t wired up in
-              this build.
+              Export builds a PDF of the whole of {formatMonthName(month)} and shows it for review
+              before saving. Bank syncing isn&apos;t wired up in this build.
             </div>
           </section>
         </div>
       </div>
+
+      <PdfPreview
+        open={!!preview}
+        title="Expenses"
+        subtitle={formatMonthName(month)}
+        file={preview}
+        onClose={() => setPreview(null)}
+      />
     </>
   );
 }
