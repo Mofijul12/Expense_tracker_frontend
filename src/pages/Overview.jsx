@@ -184,7 +184,7 @@ export default function Overview() {
                     </button>
                   </div>
                   <div className="table-scroll">
-                    <table className="table">
+                    <table className="table table-cards">
                       <thead>
                         <tr>
                           <th>Date</th>
@@ -208,10 +208,10 @@ export default function Overview() {
                                 {e.category?.name || 'Uncategorized'}
                               </span>
                             </td>
-                            <td style={{ color: 'var(--color-neutral-500)' }}>
+                            <td className="note-cell" style={{ color: 'var(--color-neutral-500)' }}>
                               {e.note || '—'}
                             </td>
-                            <td className="num" style={{ textAlign: 'right' }}>
+                            <td className="num amount-cell" style={{ textAlign: 'right' }}>
                               {formatMoney(e.amount, settings)}
                             </td>
                           </tr>

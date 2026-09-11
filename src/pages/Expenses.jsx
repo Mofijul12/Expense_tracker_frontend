@@ -160,7 +160,7 @@ export default function Expenses() {
             {(data) => (
               <section className="panel" style={{ padding: 'var(--space-3) 0' }}>
                 <div className="table-scroll">
-                  <table className="table">
+                  <table className="table table-cards">
                     <thead>
                       <tr>
                         <th style={{ width: 30 }} />
@@ -191,8 +191,10 @@ export default function Expenses() {
                               {e.category?.name || 'Uncategorized'}
                             </span>
                           </td>
-                          <td>{e.note || <span className="muted-sm">—</span>}</td>
-                          <td className="num" style={{ textAlign: 'right' }}>
+                          <td className="note-cell">
+                            {e.note || <span className="muted-sm">—</span>}
+                          </td>
+                          <td className="num amount-cell" style={{ textAlign: 'right' }}>
                             {formatMoney(e.amount, settings)}
                           </td>
                         </tr>

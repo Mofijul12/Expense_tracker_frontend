@@ -344,14 +344,47 @@ body:has(.app) { overflow: hidden; }
 
 /* — phones — */
 @media (max-width: 760px) {
-  /* Only here does the wrapper become a scroller: a table cannot compress
-     below its columns, so it scrolls inside the panel rather than forcing the
-     whole page sideways. */
+  /* A safety net for any table that still cannot fit; it scrolls inside its
+     panel rather than dragging the whole page sideways. No table is given a
+     min-width, so this engages only when the content genuinely demands it. */
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .table { min-width: 480px; }
 
   .grid-2 { grid-template-columns: 1fr; }
   .donut-row { flex-wrap: wrap; justify-content: center; gap: var(--space-4); }
+}
+
+/* — expense rows become cards — */
+@media (max-width: 620px) {
+  /* These tables carry a free-text note, which cannot survive being squeezed
+     into a narrow column: it clips mid-word, and the amount — the column that
+     matters most — ends up off-screen behind a horizontal scroll. Below this
+     width each row restacks instead: date, category and amount on one line,
+     with the note wrapping in full underneath. */
+  .table-cards,
+  .table-cards tbody { display: block; }
+  .table-cards thead { display: none; }
+
+  .table-cards tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3) var(--space-2);
+  }
+  .table-cards tbody td { display: block; padding: 0; border: 0; }
+
+  .table-cards tbody td.amount-cell { margin-left: auto; }
+
+  /* A full basis drops the note onto its own line, free to run to any height
+     rather than being clipped to one column's width. It is ordered last so the
+     amount stays up on the date line: the note sits after it in the markup, and
+     without this its wrap would push the amount down onto a third line. */
+  .table-cards tbody td.note-cell {
+    order: 1;
+    flex-basis: 100%;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
 }
 
 @media (max-width: 560px) {
