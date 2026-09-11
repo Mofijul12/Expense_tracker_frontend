@@ -85,7 +85,7 @@ export default function Reports() {
               <section className="panel">
                 <h4 style={{ margin: '0 0 var(--space-4)', fontSize: 16 }}>Category mix</h4>
                 {mix.data && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-6)' }}>
+                  <div className="donut-row">
                     <Donut
                       items={mix.data.items}
                       total={mix.data.total}
@@ -128,47 +128,49 @@ export default function Reports() {
                 <h4 style={{ margin: '0 var(--space-6) var(--space-4)', fontSize: 16 }}>
                   Biggest movers vs {movers.data?.previousLabel?.split(' ')[0] || 'last month'}
                 </h4>
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Category</th>
-                      <th style={{ textAlign: 'right' }}>
-                        {movers.data?.previousLabel?.split(' ')[0] || 'Prev'}
-                      </th>
-                      <th style={{ textAlign: 'right' }}>
-                        {formatMonthName(month).split(' ')[0].slice(0, 3)}
-                      </th>
-                      <th style={{ textAlign: 'right' }}>Change</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {movers.data?.items.slice(0, 6).map((m) => (
-                      <tr key={m._id}>
-                        <td>{m.name}</td>
-                        <td className="num" style={{ textAlign: 'right', color: 'var(--color-neutral-500)' }}>
-                          {formatMoney(m.previous, settings)}
-                        </td>
-                        <td className="num" style={{ textAlign: 'right' }}>
-                          {formatMoney(m.current, settings)}
-                        </td>
-                        <td
-                          className="num"
-                          style={{
-                            textAlign: 'right',
-                            color:
-                              m.direction === 'up'
-                                ? 'var(--color-accent-300)'
-                                : m.direction === 'down'
-                                  ? 'var(--color-neutral-400)'
-                                  : 'var(--color-neutral-600)',
-                          }}
-                        >
-                          {formatDelta(m.pct)}
-                        </td>
+                <div className="table-scroll">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th style={{ textAlign: 'right' }}>
+                          {movers.data?.previousLabel?.split(' ')[0] || 'Prev'}
+                        </th>
+                        <th style={{ textAlign: 'right' }}>
+                          {formatMonthName(month).split(' ')[0].slice(0, 3)}
+                        </th>
+                        <th style={{ textAlign: 'right' }}>Change</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {movers.data?.items.slice(0, 6).map((m) => (
+                        <tr key={m._id}>
+                          <td>{m.name}</td>
+                          <td className="num" style={{ textAlign: 'right', color: 'var(--color-neutral-500)' }}>
+                            {formatMoney(m.previous, settings)}
+                          </td>
+                          <td className="num" style={{ textAlign: 'right' }}>
+                            {formatMoney(m.current, settings)}
+                          </td>
+                          <td
+                            className="num"
+                            style={{
+                              textAlign: 'right',
+                              color:
+                                m.direction === 'up'
+                                  ? 'var(--color-accent-300)'
+                                  : m.direction === 'down'
+                                    ? 'var(--color-neutral-400)'
+                                    : 'var(--color-neutral-600)',
+                            }}
+                          >
+                            {formatDelta(m.pct)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </section>
             </div>
           </div>

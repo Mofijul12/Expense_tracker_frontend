@@ -159,45 +159,47 @@ export default function Expenses() {
           >
             {(data) => (
               <section className="panel" style={{ padding: 'var(--space-3) 0' }}>
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: 30 }} />
-                      <th>Date</th>
-                      <th>Category</th>
-                      <th>Note</th>
-                      <th style={{ textAlign: 'right' }}>Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.items.map((e) => (
-                      <tr
-                        key={e._id}
-                        className="row-link"
-                        onClick={() => navigate(`/app/expenses/${e._id}`)}
-                      >
-                        <td>
-                          <i
-                            className={e.category?.icon || 'ph ph-question'}
-                            style={{ fontSize: 15, color: 'var(--color-accent)' }}
-                          />
-                        </td>
-                        <td style={{ color: 'var(--color-neutral-500)', whiteSpace: 'nowrap' }}>
-                          {formatShortDate(e.date)}
-                        </td>
-                        <td>
-                          <span className="tag tag-neutral">
-                            {e.category?.name || 'Uncategorized'}
-                          </span>
-                        </td>
-                        <td>{e.note || <span className="muted-sm">—</span>}</td>
-                        <td className="num" style={{ textAlign: 'right' }}>
-                          {formatMoney(e.amount, settings)}
-                        </td>
+                <div className="table-scroll">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: 30 }} />
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Note</th>
+                        <th style={{ textAlign: 'right' }}>Amount</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {data.items.map((e) => (
+                        <tr
+                          key={e._id}
+                          className="row-link"
+                          onClick={() => navigate(`/app/expenses/${e._id}`)}
+                        >
+                          <td>
+                            <i
+                              className={e.category?.icon || 'ph ph-question'}
+                              style={{ fontSize: 15, color: 'var(--color-accent)' }}
+                            />
+                          </td>
+                          <td style={{ color: 'var(--color-neutral-500)', whiteSpace: 'nowrap' }}>
+                            {formatShortDate(e.date)}
+                          </td>
+                          <td>
+                            <span className="tag tag-neutral">
+                              {e.category?.name || 'Uncategorized'}
+                            </span>
+                          </td>
+                          <td>{e.note || <span className="muted-sm">—</span>}</td>
+                          <td className="num" style={{ textAlign: 'right' }}>
+                            {formatMoney(e.amount, settings)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
                 <div
                   style={{

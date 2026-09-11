@@ -10,6 +10,9 @@ body:has(.app) { overflow: hidden; }
 .num { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 
 .app { display: flex; height: 100vh; background: var(--color-bg); color: var(--color-text); }
+/* Mobile browsers count the collapsing address bar inside 100vh, so the shell
+   would overflow by its height. dvh tracks the actually-visible viewport. */
+@supports (height: 100dvh) { .app { height: 100dvh; } }
 
 /* — sidebar — */
 .sidebar {
@@ -51,7 +54,11 @@ body:has(.app) { overflow: hidden; }
   display: flex; align-items: center; gap: var(--space-4);
   padding: 14px var(--space-8); border-bottom: 1px solid rgba(233,233,237,.1);
 }
-.topbar-title { font-size: 19px; font-weight: 500; letter-spacing: -0.015em; }
+.topbar-heading { min-width: 0; }
+.topbar-title {
+  font-size: 19px; font-weight: 500; letter-spacing: -0.015em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .topbar-sub { font-size: 11.5px; color: var(--color-neutral-600); }
 .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: var(--space-3); }
 
@@ -257,3 +264,118 @@ body:has(.app) { overflow: hidden; }
   color: var(--color-neutral-500); font-size: 15px;
 }
 .account-out:hover { background: rgba(233, 233, 237, 0.07); color: var(--color-text); }
+
+
+/* ══ responsive ═════════════════════════════════════════════════════
+   Above 900px the sidebar is a permanent column. Below it, the sidebar
+   becomes an overlay drawer and the topbar grows a hamburger. The chrome
+   for that lives here and is inert on desktop. */
+
+.nav-toggle,
+.nav-close {
+  display: none; /* the drawer breakpoint turns these on */
+  width: 38px; height: 38px; flex: none; padding: 0;
+  border: 0; border-radius: var(--radius-md);
+  background: transparent; color: var(--color-neutral-400);
+  font-size: 19px; cursor: pointer;
+}
+.nav-toggle:hover,
+.nav-close:hover { background: rgba(233,233,237,.07); color: var(--color-text); }
+.nav-close { margin-left: auto; }
+
+.nav-scrim { display: none; }
+
+.month-nav { display: flex; align-items: center; gap: 4px; }
+.month-step { padding: 6px 8px; }
+
+.donut-row { display: flex; align-items: center; gap: var(--space-6); }
+
+/* A plain wrapper on desktop; the scroll container only engages on narrow
+   screens, so nothing here can clip a wide layout unnecessarily. */
+.table-scroll { min-width: 0; }
+
+/* — tablet / small laptop — */
+/* The two-up stat grid between 900 and 1180 is the original design's choice and
+   is left alone; a phone-width rule below stacks them only when two no longer
+   fit. */
+
+/* — the sidebar becomes a drawer — */
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 70;
+    width: min(84vw, 272px);
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform .22s ease;
+    box-shadow: 0 0 40px rgba(0,0,0,.55);
+  }
+  .sidebar.open { transform: none; }
+
+  .nav-scrim {
+    display: block; position: fixed; inset: 0; z-index: 65;
+    background: rgba(10,11,18,.62);
+    opacity: 0; pointer-events: none; transition: opacity .22s ease;
+  }
+  .nav-scrim.open { opacity: 1; pointer-events: auto; }
+
+  .nav-toggle,
+  .nav-close { display: grid; place-items: center; }
+
+  /* Roomier rows — 30px is fine for a cursor, not for a thumb. */
+  .sidenav a { padding: 10px var(--space-3); font-size: 14.5px; }
+
+  /* Title on the first row, controls wrap onto their own. */
+  .topbar { flex-wrap: wrap; gap: var(--space-3); padding: 10px var(--space-4); }
+  .topbar-heading { flex: 1 1 auto; }
+  .topbar-title { font-size: 17px; }
+  .topbar-actions { margin-left: 0; width: 100%; flex-wrap: wrap; gap: var(--space-2); }
+  .searchbox { flex: 1 1 150px; width: auto; min-width: 0; }
+  .add-expense { margin-left: auto; }
+
+  .screen { padding: var(--space-4); }
+  .panel { padding: var(--space-4); }
+
+  /* iOS Safari zooms the page when a focused field is under 16px. */
+  .input,
+  .searchbox input { font-size: 16px; }
+
+  .month-step { padding: 8px 10px; }
+}
+
+/* — phones — */
+@media (max-width: 760px) {
+  /* Only here does the wrapper become a scroller: a table cannot compress
+     below its columns, so it scrolls inside the panel rather than forcing the
+     whole page sideways. */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table { min-width: 480px; }
+
+  .grid-2 { grid-template-columns: 1fr; }
+  .donut-row { flex-wrap: wrap; justify-content: center; gap: var(--space-4); }
+}
+
+@media (max-width: 560px) {
+  .stat-value { font-size: 24px; }
+  /* Two tiles still read well at 360px; below that they get too cramped. */
+  .state-block { padding: 40px var(--space-4); }
+
+  /* The label goes, the icon and the hit area stay. */
+  .add-expense .btn-label { display: none; }
+  .add-expense { width: 38px; height: 38px; padding: 0; }
+
+  /* Full-bleed so a long message is not squeezed into a corner. */
+  .toast { left: var(--space-4); right: var(--space-4); bottom: var(--space-4); }
+
+  .panel-head { flex-wrap: wrap; gap: var(--space-2); }
+  .amount-field input { font-size: 22px; }
+}
+
+/* Two tiles still read well at 360px, the common phone width; only the
+   narrowest devices need them stacked. */
+@media (max-width: 340px) {
+  .stat-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar, .nav-scrim { transition: none; }
+}

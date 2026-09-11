@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AppProvider, useApp } from './lib/store.jsx';
 import { AuthProvider, useAuth } from './lib/auth.jsx';
-import { Sidebar, ErrorState, Loading } from './components/Shell.jsx';
+import { Sidebar, ErrorState, Loading, NavProvider } from './components/Shell.jsx';
 
 import Home from './pages/Home.jsx';
 import { Login, Register } from './pages/Auth.jsx';
@@ -69,24 +69,26 @@ function AppShell() {
   }
 
   return (
-    <div className="app">
-      <Sidebar />
-      <main className="main">
-        <Routes>
-          <Route index element={<Overview />} />
-          <Route path="expenses" element={<Expenses />} />
-          <Route path="expenses/new" element={<AddExpense />} />
-          <Route path="expenses/:id" element={<ExpenseDetail />} />
-          <Route path="expenses/:id/edit" element={<AddExpense />} />
-          <Route path="budgets" element={<Budgets />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="categories" element={<Categories />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="*" element={<Navigate to="/app" replace />} />
-        </Routes>
-      </main>
-      <Toast />
-    </div>
+    <NavProvider>
+      <div className="app">
+        <Sidebar />
+        <main className="main">
+          <Routes>
+            <Route index element={<Overview />} />
+            <Route path="expenses" element={<Expenses />} />
+            <Route path="expenses/new" element={<AddExpense />} />
+            <Route path="expenses/:id" element={<ExpenseDetail />} />
+            <Route path="expenses/:id/edit" element={<AddExpense />} />
+            <Route path="budgets" element={<Budgets />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="categories" element={<Categories />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="*" element={<Navigate to="/app" replace />} />
+          </Routes>
+        </main>
+        <Toast />
+      </div>
+    </NavProvider>
   );
 }
 

@@ -183,40 +183,42 @@ export default function Overview() {
                       <i className="ph ph-arrow-right" style={{ fontSize: 13 }} />
                     </button>
                   </div>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Category</th>
-                        <th>Note</th>
-                        <th style={{ textAlign: 'right' }}>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.recent.map((e) => (
-                        <tr
-                          key={e._id}
-                          className="row-link"
-                          onClick={() => navigate(`/app/expenses/${e._id}`)}
-                        >
-                          <td style={{ color: 'var(--color-neutral-500)', whiteSpace: 'nowrap' }}>
-                            {formatShortDate(e.date)}
-                          </td>
-                          <td>
-                            <span className="tag tag-neutral">
-                              {e.category?.name || 'Uncategorized'}
-                            </span>
-                          </td>
-                          <td style={{ color: 'var(--color-neutral-500)' }}>
-                            {e.note || '—'}
-                          </td>
-                          <td className="num" style={{ textAlign: 'right' }}>
-                            {formatMoney(e.amount, settings)}
-                          </td>
+                  <div className="table-scroll">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Category</th>
+                          <th>Note</th>
+                          <th style={{ textAlign: 'right' }}>Amount</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {data.recent.map((e) => (
+                          <tr
+                            key={e._id}
+                            className="row-link"
+                            onClick={() => navigate(`/app/expenses/${e._id}`)}
+                          >
+                            <td style={{ color: 'var(--color-neutral-500)', whiteSpace: 'nowrap' }}>
+                              {formatShortDate(e.date)}
+                            </td>
+                            <td>
+                              <span className="tag tag-neutral">
+                                {e.category?.name || 'Uncategorized'}
+                              </span>
+                            </td>
+                            <td style={{ color: 'var(--color-neutral-500)' }}>
+                              {e.note || '—'}
+                            </td>
+                            <td className="num" style={{ textAlign: 'right' }}>
+                              {formatMoney(e.amount, settings)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </section>
               </div>
             );

@@ -1,3 +1,4 @@
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useApp, useApi } from '../lib/store.jsx';
 import { useAuth } from '../lib/auth.jsx';
@@ -26,6 +27,40 @@ const NAV = [
   { to: '/app/categories', label: 'Categories', icon: 'ph ph-tag', match: (p) => p.startsWith('/app/categories') },
   { to: '/app/settings', label: 'Settings', icon: 'ph ph-sliders-horizontal', match: (p) => p.startsWith('/app/settings') },
 ];
+
+const NavContext = createContext(null);
+
+/**
+ * Open/closed state for the sidebar, which is a permanent column on a wide
+ * screen and an overlay drawer on a narrow one. The Sidebar and the Topbar's
+ * hamburger are siblings in the tree, so the state has to live above both.
+ */
+export function NavProvider({ children }) {
+  const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  // Following a link should dismiss the drawer, or it would sit over the screen
+  // it just navigated to.
+  useEffect(() => setOpen(false), [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => e.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  const value = useMemo(
+    () => ({ open, toggle: () => setOpen((v) => !v), close: () => setOpen(false) }),
+    [open]
+  );
+  return <NavContext.Provider value={value}>{children}</NavContext.Provider>;
+}
+
+// Falls back to a no-op so a Topbar rendered outside the provider still works.
+export function useNav() {
+  return useContext(NavContext) ?? { open: false, toggle: () => {}, close: () => {} };
+}
 
 /** Signed-in identity and the way out, pinned under the nav. */
 function AccountBox() {
@@ -95,34 +130,44 @@ function BudgetPeek() {
 
 export function Sidebar() {
   const { pathname } = useLocation();
+  const { open, close } = useNav();
 
   return (
-    <aside className="sidebar">
-      <div className="brand">
-        <div className="brand-mark">
-          <i className="ph ph-wallet" />
+    <>
+      {/* Dims the page behind the open drawer; tapping it closes. Hidden and
+          non-interactive above the drawer breakpoint. */}
+      <div className={`nav-scrim${open ? ' open' : ''}`} onClick={close} aria-hidden="true" />
+
+      <aside id="app-sidebar" className={`sidebar${open ? ' open' : ''}`}>
+        <div className="brand">
+          <div className="brand-mark">
+            <i className="ph ph-wallet" />
+          </div>
+          <span className="brand-name">Ledgerline</span>
+          <button type="button" className="nav-close" onClick={close} aria-label="Close menu">
+            <i className="ph ph-x" />
+          </button>
         </div>
-        <span className="brand-name">Ledgerline</span>
-      </div>
 
-      <nav className="sidenav">
-        {NAV.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            // A function className stops NavLink appending its own "active",
-            // which would light up Expenses while sitting on /expenses/new.
-            className={() => (item.match(pathname) ? 'active' : undefined)}
-          >
-            <i className={item.icon} style={{ fontSize: 16 }} />
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
+        <nav className="sidenav">
+          {NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              // A function className stops NavLink appending its own "active",
+              // which would light up Expenses while sitting on /expenses/new.
+              className={() => (item.match(pathname) ? 'active' : undefined)}
+            >
+              <i className={item.icon} style={{ fontSize: 16 }} />
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
 
-      <BudgetPeek />
-      <AccountBox />
-    </aside>
+        <BudgetPeek />
+        <AccountBox />
+      </aside>
+    </>
   );
 }
 
@@ -131,21 +176,32 @@ export function Topbar({ title, subtitle, search, onSearch }) {
   const { month, setMonth } = useApp();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { open, toggle } = useNav();
   const onAddScreen = pathname === '/app/expenses/new';
 
   return (
     <header className="topbar">
-      <div>
+      <button
+        type="button"
+        className="nav-toggle"
+        onClick={toggle}
+        aria-label="Open menu"
+        aria-controls="app-sidebar"
+        aria-expanded={open}
+      >
+        <i className="ph ph-list" />
+      </button>
+
+      <div className="topbar-heading">
         <div className="topbar-title">{title}</div>
         <div className="topbar-sub">{subtitle}</div>
       </div>
 
       <div className="topbar-actions">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div className="month-nav">
           <button
             type="button"
-            className="month-picker"
-            style={{ padding: '6px 8px' }}
+            className="month-picker month-step"
             onClick={() => setMonth(shiftMonth(month, -1))}
             aria-label="Previous month"
           >
@@ -157,8 +213,7 @@ export function Topbar({ title, subtitle, search, onSearch }) {
           </span>
           <button
             type="button"
-            className="month-picker"
-            style={{ padding: '6px 8px' }}
+            className="month-picker month-step"
             onClick={() => setMonth(shiftMonth(month, 1))}
             aria-label="Next month"
           >
@@ -179,9 +234,14 @@ export function Topbar({ title, subtitle, search, onSearch }) {
         )}
 
         {!onAddScreen && (
-          <button className="btn btn-primary" onClick={() => navigate('/app/expenses/new')}>
+          <button
+            className="btn btn-primary add-expense"
+            onClick={() => navigate('/app/expenses/new')}
+            aria-label="Add expense"
+          >
             <i className="ph ph-plus" style={{ fontSize: 14 }} />
-            Add expense
+            {/* Collapses to a square icon button when the bar runs out of room. */}
+            <span className="btn-label">Add expense</span>
           </button>
         )}
       </div>
