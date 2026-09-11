@@ -1,4 +1,6 @@
-const BASE = '/api';
+// The API origin is configurable so a deployed build can point at a backend on
+// another host. The default keeps development on Vite's /api proxy.
+const BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
 async function request(path, options = {}) {
   const res = await fetch(BASE + path, {
