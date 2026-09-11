@@ -107,8 +107,7 @@ export default function Expenses() {
                     await buildExpensesPdf({
                       rows: state.data.items,
                       settings,
-                      title: 'Expenses',
-                      subtitle: `Every expense in ${formatMonthName(month)}`,
+                      subtitle: formatMonthName(month),
                       filename: `expenses-${month}.pdf`,
                     })
                   );
